@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Incident Reports</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+    nav { background: #16213e; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #0f3460; }
+    nav h1 { color: #e94560; font-size: 1.3rem; font-weight: 700; }
+    nav a { color: #a0a0c0; text-decoration: none; margin-left: 24px; font-size: 0.9rem; cursor: pointer; }
+    nav a:hover { color: #e94560; }
+    .hero { text-align: center; padding: 60px 20px 40px; }
+    .hero h2 { font-size: 2rem; color: #fff; margin-bottom: 10px; }
+    .hero p { color: #888; }
+    .container { max-width: 860px; margin: 0 auto; padding: 20px; }
+    .card { background: #16213e; border: 1px solid #0f3460; border-radius: 12px; padding: 32px; margin-bottom: 24px; }
+    .card h3 { color: #e94560; margin-bottom: 20px; font-size: 1.1rem; }
+    label { display: block; margin-bottom: 6px; color: #a0a0c0; font-size: 0.85rem; }
+    input, textarea, select { width: 100%; background: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; padding: 10px 14px; color: #e0e0e0; font-size: 0.95rem; margin-bottom: 16px; outline: none; transition: border-color 0.2s; }
+    input:focus, textarea:focus, select:focus { border-color: #e94560; }
+    textarea { resize: vertical; min-height: 100px; }
+    button { background: #e94560; color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #c73652; }
+    .reports-list { display: flex; flex-direction: column; gap: 14px; }
+    .report-card { background: #1a1a2e; border: 1px solid #0f3460; border-radius: 10px; padding: 18px 20px; }
+    .report-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .report-info h4 { color: #fff; margin-bottom: 4px; font-size: 0.95rem; }
+    .report-info p { color: #888; font-size: 0.82rem; }
+    .report-body { color: #ccc; font-size: 0.88rem; margin-top: 8px; }
+    .report-evidence { color: #888; font-size: 0.8rem; margin-top: 4px; }
+    .report-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .report-actions button { padding: 5px 12px; font-size: 0.78rem; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+    .badge.open { background: #e9456020; color: #e94560; border: 1px solid #e94560; }
+    .badge.investigating { background: #f39c1220; color: #f39c12; border: 1px solid #f39c12; }
+    .badge.closed { background: #2ecc7120; color: #2ecc71; border: 1px solid #2ecc71; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 24px; }
+    .tab { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 8px 20px; color: #a0a0c0; cursor: pointer; font-size: 0.88rem; transition: all 0.2s; }
+    .tab.active { background: #e94560; border-color: #e94560; color: #fff; }
+    .empty { text-align: center; color: #555; padding: 40px 0; font-size: 0.9rem; }
+    .toast { position: fixed; bottom: 30px; right: 30px; background: #2ecc71; color: #fff; padding: 14px 24px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .config-notice { background: #f39c1220; border: 1px solid #f39c12; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; color: #f39c12; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <h1>⚖️ Incident Reports</h1>
+  <div>
+    <a onclick="showTab('submit')">Submit Report</a>
+    <a onclick="showTab('view')">View Reports</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h2>Report an Incident</h2>
+  <p>Submit rule violations or misconduct for staff review.</p>
+</div>
+
+<div class="container">
+
+  <div id="tab-submit">
+    <div class="config-notice" id="api-notice" style="display:none">
+      ⚠️ Set your API URL in the script below to connect to your backend.
+    </div>
+    <div class="card">
+      <h3>New Incident Report</h3>
+      <label>Your Discord Username</label>
+      <input type="text" id="reporter" placeholder="e.g. username" />
+      <label>Accused User</label>
+      <input type="text" id="accused" placeholder="e.g. username" />
+      <label>Incident Type</label>
+      <select id="type">
+        <option value="harassment">Harassment</option>
+        <option value="cheating">Cheating</option>
+        <option value="scamming">Scamming</option>
+        <option value="spam">Spam</option>
+        <option value="other">Other</option>
+      </select>
+      <label>Description</label>
+      <textarea id="description" placeholder="Describe what happened in detail..."></textarea>
+      <label>Evidence (links, screenshots, etc.)</label>
+      <textarea id="evidence" placeholder="Paste image links or describe your evidence..." style="min-height:70px"></textarea>
+      <button onclick="submitReport()">Submit Report</button>
+    </div>
+  </div>
+
+  <div id="tab-view" style="display:none">
+    <div class="tabs">
+      <div class="tab active" onclick="filterReports('all', this)">All</div>
+      <div class="tab" onclick="filterReports('open', this)">Open</div>
+      <div class="tab" onclick="filterReports('investigating', this)">Investigating</div>
+      <div class="tab" onclick="filterReports('closed', this)">Closed</div>
+    </div>
+    <div class="card">
+      <h3>Reports</h3>
+      <div class="reports-list" id="reports-list">
+        <div class="empty">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Report submitted!</div>
+
+<script>
+  // ← REPLACE THIS with your Railway backend URL once deployed
+const API = "https://mod-bot-production-331a.up.railway.app";
+
+  let currentFilter = "all";
+
+  function showTab(tab) {
+    document.getElementById("tab-submit").style.display = tab === "submit" ? "" : "none";
+    document.getElementById("tab-view").style.display = tab === "view" ? "" : "none";
+    if (tab === "view") loadReports();
+  }
+
+  async function submitReport() {
+    const reporter = document.getElementById("reporter").value.trim();
+    const accused = document.getElementById("accused").value.trim();
+    const type = document.getElementById("type").value;
+    const description = document.getElementById("description").value.trim();
+    const evidence = document.getElementById("evidence").value.trim();
+
+    if (!reporter || !accused || !description) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    await fetch(`${API}/reports`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reporter, accused, type, description, evidence })
+    });
+
+    document.getElementById("reporter").value = "";
+    document.getElementById("accused").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("evidence").value = "";
+
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  }
+
+  async function loadReports() {
+    const url = currentFilter === "all" ? `${API}/reports` : `${API}/reports?status=${currentFilter}`;
+    const res = await fetch(url);
+    const reports = await res.json();
+    renderReports(reports);
+  }
+
+  function filterReports(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+    loadReports();
+  }
+
+  async function updateStatus(id, status) {
+    await fetch(`${API}/reports/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+    loadReports();
+  }
+
+  async function deleteReport(id) {
+    if (!confirm("Delete this report?")) return;
+    await fetch(`${API}/reports/${id}`, { method: "DELETE" });
+    loadReports();
+  }
+
+  function renderReports(reports) {
+    const list = document.getElementById("reports-list");
+    if (!reports.length) {
+      list.innerHTML = "<div class='empty'>No reports found.</div>";
+      return;
+    }
+    list.innerHTML = reports.map(r => `
+      <div class="report-card">
+        <div class="report-top">
+          <div class="report-info">
+            <h4>${r.accused} — ${r.type.charAt(0).toUpperCase() + r.type.slice(1)}</h4>
+            <p>Reported by ${r.reporter} on ${new Date(r.date).toLocaleDateString()}</p>
+          </div>
+          <span class="badge ${r.status}">${r.status}</span>
+        </div>
+        <p class="report-body">${r.description}</p>
+        ${r.evidence ? `<p class="report-evidence">Evidence: ${r.evidence}</p>` : ""}
+        <div class="report-actions">
+          <button style="background:#f39c12" onclick="updateStatus('${r._id}','investigating')">Investigating</button>
+          <button style="background:#2ecc71" onclick="updateStatus('${r._id}','closed')">Close</button>
+          <button style="background:#e94560" onclick="updateStatus('${r._id}','open')">Reopen</button>
+          <button style="background:#555" onclick="deleteReport('${r._id}')">Delete</button>
+        </div>
+      </div>
+    `).join("");
+  }
+</script>
+
+</body>
+</html>
